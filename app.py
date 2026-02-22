@@ -17,6 +17,11 @@ class Expense:
     split_among: list[str] = field(default_factory=list)
 
 
+@st.cache_resource
+def get_expenses() -> list[Expense]:
+    return []
+
+
 def compute_minimal_transfers(expenses: list[Expense]) -> list[tuple[str, str, float]]:
     """Compute minimal number of transfers to settle all debts.
 
@@ -64,16 +69,11 @@ def compute_minimal_transfers(expenses: list[Expense]) -> list[tuple[str, str, f
     return transfers
 
 
-def init_state() -> None:
-    if "expenses" not in st.session_state:
-        st.session_state.expenses = []
-
-
 def main() -> None:
     st.set_page_config(page_title="SplitWise — Ski Trip", page_icon="⛷️", layout="centered")
     st.title("⛷️ Ski Trip — Expense Splitter")
 
-    init_state()
+    expenses = get_expenses()
 
     # --- Add expense form ---
     st.header("Add Expense")
@@ -99,12 +99,11 @@ def main() -> None:
                     description=description,
                     split_among=split_among,
                 )
-                st.session_state.expenses.append(expense)
+                expenses.append(expense)
                 st.success(f"Added: {paid_by} paid €{amount:.2f}")
 
     # --- Expenses list ---
     st.header("Expenses")
-    expenses: list[Expense] = st.session_state.expenses
 
     if not expenses:
         st.info("No expenses yet. Add one above.")
@@ -122,7 +121,7 @@ def main() -> None:
                 )
             with col_btn:
                 if st.button("🗑️", key=f"del_{exp.id}_{i}"):
-                    st.session_state.expenses.pop(i)
+                    expenses.pop(i)
                     st.rerun()
 
     # --- Settle ---
